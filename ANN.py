@@ -26,10 +26,10 @@ class Perceptron:
     - learning_rate: tasa de aprendizaje.
     """
 
-    def __init__(self, weights:np.ndarray, bias:float, learning_rate:float = 0.1, activation_function:str = "sigmoid"):
+    def __init__(self, weights:np.ndarray = None, bias:float = None, learning_rate:float = 0.1, activation_function:str = "sigmoid"):
         """Inicializa un perceptrón con los valores dados."""
-        self.weights = weights
-        self.bias = bias
+        self._weights = weights
+        self._bias = bias
         self.learning_rate = learning_rate
         activation_names = ["sigmoid", "tanh", "relu", "leaky_relu", "softmax", "linear", "step", "identity", "binary_step"]
         activation_functions_list = [sigmoid, tanh, relu, leaky_relu, softmax, linear, step, identity, binary_step]
@@ -40,12 +40,62 @@ class Perceptron:
         
     def predict(self, inputs):
         """Toma los pesos y bias y genera una salida con los inputs dados"""
-        return self.activation_function(np.dot(inputs, self.weights)+self.bias)
+        return self.activation_function(np.dot(inputs, self._weights)+self.bias)
     
     def train(self, error):
         """Actualiza pesos y bias"""
         pass
 
+    @property
+    def weights(self):
+        return self._weights
+    
+    @weights.setter
+    def weights(self, weights):
+        if weights is None:
+            self._weights = np.random.random(10)
+        else:
+            self._weights = weights
+
+class InputLayer:
+    """Clase para representar una capa de entrada de una red neuronal.
+    La clase sólo recibe los inputs y los pasa a la siguiente capa.
+    """
+    def __init__(self, inputs:np.ndarray):
+        #chequeamos que los inputs sean un array de numpy de 1 dimensión
+        if not isinstance(inputs, np.ndarray):
+            raise ValueError("Los inputs deben ser un array de numpy")
+        if len(inputs.shape) != 1:
+            raise ValueError("Los inputs deben ser un array de 1 dimensión")
+        self.inputs = inputs
+
+    def forward(self):
+        return self.inputs
+    
+    def __str__(self):
+        return f"InputLayer({self.inputs})"
+    
+    def __repr__(self) -> str:
+        return f"InputLayer({self.inputs})"
+    
+class HiddenLayer:
+    """Clase para representar una capa oculta de una red neuronal.
+    La clase recibe los inputs y los pasa a los perceptrones de la capa.
+    """
+    def __init__(self, perceptrons:list):
+        self.perceptrons = perceptrons
+    
+    def forward(self, inputs):
+        outputs = []
+        for perceptron in self.perceptrons:
+            outputs.append(perceptron.predict(inputs))
+        return np.array(outputs)
+    
+    def __str__(self):
+        return f"HiddenLayer({self.perceptrons})"
+    
+    def __repr__(self) -> str:
+        return f"HiddenLayer({self.perceptrons})"
 
 if __name__ == "__main__":
     np.random.seed(4)
@@ -55,6 +105,9 @@ if __name__ == "__main__":
 
     p1 = Perceptron(w1,b1, activation_function="sigmoid")
     p2 = Perceptron(w1,b1, activation_function="sigmoid")
+
+    entrada = InputLayer(inputs)
+    entrada
 
     matrix = np.vstack((p1.weights,p2.weights))
     np.dot(matrix, inputs)
