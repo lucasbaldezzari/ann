@@ -1,57 +1,75 @@
 """Módulo con las funciones de activación más comunes."""
 import numpy as np
 
-def sigmoid(x, derivative = False):
+class sigmoid:
     """Función sigmoide."""
-    if derivative:
+    def __call__(self, x):
+        return 1 / (1 + np.exp(-x))
+    
+    def derivative(self, x):
         return x * (1 - x)
-    return 1 / (1 + np.exp(-x))
-
-def tanh(x, derivative = False):
+    
+class tanh:
     """Función tangente hiperbólica."""
-    if derivative:
+    def __call__(self, x):
+        return np.tanh(x)
+    
+    def derivative(self, x):
         return 1 - x ** 2
-    return np.tanh(x)
-
-def relu(x, derivative = False):
+    
+class relu:
     """Función ReLU."""
-    if derivative:
+    def __call__(self, x):
+        return np.maximum(0, x)
+    
+    def derivative(self, x):
         return np.where(x > 0, 1, 0)
-    return np.maximum(0, x)
 
-def leaky_relu(x, derivative = False):
+class leaky_relu:
     """Función Leaky ReLU."""
-    if derivative:
+    def __call__(self, x):
+        return np.maximum(0.01 * x, x)
+    
+    def derivative(self, x):
         return np.where(x > 0, 1, 0.01)
-    return np.maximum(0.01 * x, x)
-
-def linear(x, derivative = False):
+    
+class linear:
     """Función lineal."""
-    if derivative:
+    def __call__(self, x):
+        return x
+    
+    def derivative(self, x):
         return np.ones_like(x)
-    return x
-
-def softmax(x, derivative = False):
+    
+class softmax:
     """Función softmax."""
-    if derivative:
+    def __call__(self, x):
+        exps = np.exp(x - x.max())
+        return exps / np.sum(exps, axis=0)
+    
+    def derivative(self, x):
         return x * (1 - x)
-    exps = np.exp(x - x.max())
-    return exps / np.sum(exps, axis=0)
-
-def step(x, derivative = False):
+    
+class step:
     """Función escalón."""
-    if derivative:
+    def __call__(self, x):
+        return np.where(x >= 0, 1, 0)
+    
+    def derivative(self, x):
         return 0
-    return np.where(x >= 0, 1, 0)
-
-def identity(x, derivative = False):
+    
+class identity:
     """Función identidad."""
-    if derivative:
+    def __call__(self, x):
+        return x
+    
+    def derivative(self, x):
         return np.ones_like(x)
-    return x
-
-def binary_step(x, derivative = False):
+    
+class binary_step:
     """Función escalón binario."""
-    if derivative:
+    def __call__(self, x):
+        return np.where(x >= 0, 1, 0)
+    
+    def derivative(self, x):
         return 0
-    return np.where(x >= 0, 1, 0)
