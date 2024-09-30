@@ -17,7 +17,7 @@ class Input:
         self.input_shape = input_shape
         self.name = name
 
-    def forward(self, inputs):
+    def predict(self, inputs):
         """Toma los inputs y los pasa a la siguiente capa
         Args:
         - inputs (np.ndarray): array con los inputs. No puede ser mayor a dos dimensiones.
@@ -86,7 +86,7 @@ class Dense:
             bias = np.random.random(self._outputs)
         return bias
     
-    def forward(self, inputs):
+    def predict(self, inputs):
         """Toma los inputs y los pasa a los perceptrones de la capa.
         Args:
         - inputs (np.ndarray): array con los inputs.

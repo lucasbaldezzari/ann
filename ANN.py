@@ -26,7 +26,7 @@ class NeuralNetwork:
         cada capa de la red."""
         outputs = inputs.copy()
         for layer in self.layers:
-            outputs = layer.forward(outputs)
+            outputs = layer.predict(outputs)
         return outputs
     
     def train(self, error):
@@ -54,6 +54,6 @@ if __name__ == "__main__":
     x_train = np.array([[0,0], [0,1], [1,0], [1,1]])
     y_train = np.array([[[0]], [[1]], [[1]], [[0]]])
 
-    y1 = nn.predict(x_train[0])
+    y1 = nn.predict(x_train[1])
     y1
 
