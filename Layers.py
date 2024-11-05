@@ -1,109 +1,130 @@
 import numpy as np
-from activationsFunctions import *
+from activationsFunctions import sigmoid, tanh, relu, leaky_relu, softmax, linear, step, identity, binary_step
+
+##https://towardsdatascience.com/math-neural-network-from-scratch-in-python-d6da9f29ce65
 
 class Input:
     """Clase para representar una capa de entrada de una red neuronal.
     La clase sólo recibe los inputs y los pasa a la siguiente capa.
     """
-    def __init__(self, input_shape:tuple, name = "InputLayer"):
+    def __init__(self, n_neuronas: int, name = "InputLayer"):
         """Inicializa una capa de entrada con la forma de los inputs y la forma esperada de los inputs.
         
         Args:
-        - input_shape (tupla): tupla con forma de los inputs. Máximo dos dimensiones.
+        - n_neuronas (entero): Cantidad de neuronas de la capa.
         - name: nombre de la capa.
         """
-        if len(input_shape) > 2:
-            raise ValueError("La forma de los inputs no puede ser mayor a dos dimensiones")
-        self.input_shape = input_shape
+
+        self.n_neuronas = n_neuronas
         self.name = name
 
-    def predict(self, inputs):
-        """Toma los inputs y los pasa a la siguiente capa
+    def predict(self, X):
+        """
+        Valida y pasa los inputs a la siguiente capa.
+
         Args:
-        - inputs (np.ndarray): array con los inputs. No puede ser mayor a dos dimensiones.
+        - X (np.ndarray): array con los inputs (de una o dos dimensiones).
 
         Returns:
-        - np.ndarray: array con los inputs.
+        - np.ndarray: array con los inputs si son compatibles con n_neuronas.
         """
-        ##check if the input shape is the same as the target shape
-        if inputs.shape != self.input_shape:
-            raise ValueError(f"La forma de los inputs ({inputs.shape}) no coincide con la forma esperada ({self.input_shape})")
-        return inputs
-    
-    def train(self, error):
-        """Actualiza pesos y bias usando backpropagation"""
-        pass
+        if not isinstance(X, np.ndarray):
+            raise TypeError("X debe ser un array de numpy")
+        ##chqueo que X no tenga más de dos dimensiones
+        if X.ndim > 2:
+            raise ValueError("X debe tener una o dos dimensiones")
+
+        return X
     
     def __str__(self):
-        return f"InputLayer({self.input_shape})"
+        return f"InputLayer({self.n_neuronas})"
     
     def __repr__(self) -> str:
-        return f"InputLayer({self.input_shape})"
-    
+        return f"InputLayer({self.n_neuronas})"
+
 class Dense:
-    """Clase para representar una capa oculta de una red neuronal.
-    La clase recibe los inputs y los pasa a los perceptrones de la capa.
-    """
-    def __init__(self, ninputs:int, noutputs:int, activation:str = "sigmoid", weigths_init:str = "uniform",bias_init:str = "zeros", name = "DenseLayer"):
-        """Inicializa una capa oculta con el número de nodos, función de activación y tipo de inicialización de pesos y bias.
-        
-        Args:
-        - inputs (int): número de nodos de la capa anterior
-        - outputs (int): número de nodos de la capa actual.
-        - activation (str): función de activación.
-        - weigths_init (str): tipo de inicialización de pesos.
-        - bias_init (str): tipo de inicialización de bias.
-        - name: nombre de la capa.
-        """
+    """Clase para representar una capa densa en una red neuronal."""
+    def __init__(self, ninputs: int, noutputs: int, activation="sigmoid", weights_init="uniform", bias_init="zeros", name="DenseLayer",
+                 random_seed = None):
         self._inputs = ninputs
         self._outputs = noutputs
         self._activation = activation
-        activation_names = ["sigmoid", "tanh", "relu", "leaky_relu", "softmax", "linear", "step", "identity", "binary_step"]
-        activation_functions_list = [sigmoid, tanh, relu, leaky_relu, softmax, linear, step, identity, binary_step]
-        if activation in activation_names:
-            self._activation_function = activation_functions_list[activation_names.index(activation)]()
+        self.random_seed = random_seed
+        
+        # Diccionario de funciones de activación y sus derivadas
+        activation_functions = {
+            "sigmoid": sigmoid,
+            "tanh": tanh,
+            "relu": relu,
+            "leaky_relu": leaky_relu,
+            "softmax": softmax,
+            "linear": linear,
+            "step": step,
+            "identity": identity,
+            "binary_step": binary_step,
+        }
+        
+        if activation in activation_functions:
+            self._activation_function =  activation_functions[activation]()
         else:
-            raise ValueError(f"La función de activación {activation} no es una función válida. Utilizar: ", *activation_names)
-        self._weigths_init = weigths_init
+            raise ValueError(f"La función de activación '{activation}' no es válida. Usar: {list(activation_functions.keys())}")
+        
+        self._weights_init = weights_init
         self._weights = self.__set_weights()
         self._bias_init = bias_init
         self._bias = self.__set_bias()
         self.name = name
 
     def __set_weights(self):
-        """Inicializa los pesos de la capa"""
-        if self._weigths_init == "uniform":
-            weights = np.random.uniform(-1,1,(self._inputs, self._outputs))
-        if self._weigths_init == "zeros":
+        """Inicializa los pesos de acuerdo al método especificado."""
+        np.random.seed(self.random_seed)
+        if self._weights_init == "uniform":
+            weights = np.random.uniform(-1, 1, (self._inputs, self._outputs))
+        elif self._weights_init == "zeros":
             weights = np.zeros((self._inputs, self._outputs))
+        else:
+            raise ValueError("Método de inicialización de pesos no reconocido. Usar 'uniform' o 'zeros'.")
         return weights
 
     def __set_bias(self):
-        """Inicializa los bias de la capa"""
+        """Inicializa el bias de acuerdo al método especificado."""
+        np.random.seed(self.random_seed)
         if self._bias_init == "zeros":
             bias = np.zeros(self._outputs)
-        if self._bias_init == "random":
+        elif self._bias_init == "random":
             bias = np.random.random(self._outputs)
+        elif self._bias_init == "ones":
+            bias = np.ones(self._outputs)
+        else:
+            raise ValueError("Método de inicialización de bias no definido. Usar 'zeros', 'random' o 'ones'.")
         return bias
     
-    def predict(self, inputs):
-        """Toma los inputs y los pasa a los perceptrones de la capa.
-        Args:
-        - inputs (np.ndarray): array con los inputs.
-
-        Returns:
-        - np.ndarray: array con los outputs de los perceptrones.
-        """
-        return self._activation_function(np.dot(inputs, self._weights)+self.bias)
+    def predict(self, X):
+        """Forward propagation: Calcula la salida de la capa."""
+        self.inputs = X
+        self.z = np.dot(self.inputs, self._weights) + self._bias
+        self.a = self._activation_function(self.z)
+        return self.a
     
-    def train(self, error):
-        """Actualiza pesos y bias usando backpropagation"""
-        pass
+    def train(self, error, learning_rate=0.01):
+        """Backpropagation: Actualiza los pesos y el bias."""
+        delta = error * self._activation_function.derivative(self.a)
+        weights_update = np.dot(self.inputs.T, delta)
 
-    @property
-    def perceptrons(self):
-        return self._perceptrons
-    
+        ##elimino la última dimensión de delta y weights_update
+        delta_shape = delta.shape
+        delta = delta.reshape(delta_shape[0], delta_shape[1])
+        weights_update_shape = weights_update.shape
+        weights_update = weights_update.reshape(weights_update_shape[0], weights_update_shape[1])
+        
+        ## actualizamos los pesos y biases
+        self._weights -= learning_rate * weights_update
+        self._bias -= learning_rate * delta.sum(axis=0)
+        
+        # Calcula el error para la capa anterior
+        prev_layer_error = np.dot(delta, self._weights.T)
+        return prev_layer_error
+
     @property
     def weights(self):
         return self._weights
@@ -115,5 +136,5 @@ class Dense:
     def __str__(self):
         return f"{self.name}({self._inputs},{self._outputs})"
     
-    def __repr__(self) -> str:
+    def __repr__(self):
         return f"{self.name}({self._inputs},{self._outputs})"

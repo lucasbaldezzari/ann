@@ -73,3 +73,42 @@ class binary_step:
     
     def derivative(self, x):
         return 0
+
+
+if __name__ == "__main__":
+    x = np.array([1, 2, 3, 4])
+    s = sigmoid()
+    print(s(x))
+    print(s.derivative(x))
+    
+    t = tanh()
+    print(t(x))
+    print(t.derivative(x))
+    
+    r = relu()
+    print(r(x))
+    print(r.derivative(x))
+    
+    lr = leaky_relu()
+    print(lr(x))
+    print(lr.derivative(x))
+    
+    l = linear()
+    print(l(x))
+    print(l.derivative(x))
+    
+    so = softmax()
+    print(so(x))
+    print(so.derivative(x))
+    
+    st = step()
+    print(st(x))
+    print(st.derivative(x))
+    
+    i = identity()
+    print(i(x))
+    print(i.derivative(x))
+    
+    bs = binary_step()
+    print(bs(x))
+    print(bs.derivative(x))
