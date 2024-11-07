@@ -1,5 +1,4 @@
 import numpy as np
-from activationsFunctions import sigmoid, tanh, relu, leaky_relu, softmax, linear, step, identity, binary_step
 
 ##https://towardsdatascience.com/math-neural-network-from-scratch-in-python-d6da9f29ce65
 
@@ -44,30 +43,16 @@ class Input:
 
 class Dense:
     """Clase para representar una capa densa en una red neuronal."""
-    def __init__(self, ninputs: int, noutputs: int, activation="sigmoid", weights_init="uniform", bias_init="zeros", name="DenseLayer",
+    def __init__(self, ninputs: int, noutputs: int, activation, activation_prima,
+                 weights_init="uniform", bias_init="zeros", name="DenseLayer",
                  random_seed = None):
         self._inputs = ninputs
         self._outputs = noutputs
         self._activation = activation
         self.random_seed = random_seed
-        
-        # Diccionario de funciones de activación y sus derivadas
-        activation_functions = {
-            "sigmoid": sigmoid,
-            "tanh": tanh,
-            "relu": relu,
-            "leaky_relu": leaky_relu,
-            "softmax": softmax,
-            "linear": linear,
-            "step": step,
-            "identity": identity,
-            "binary_step": binary_step,
-        }
-        
-        if activation in activation_functions:
-            self._activation_function =  activation_functions[activation]()
-        else:
-            raise ValueError(f"La función de activación '{activation}' no es válida. Usar: {list(activation_functions.keys())}")
+
+        self.activation = activation
+        self.activation_prima = activation_prima
         
         self._weights_init = weights_init
         self._weights = self.__set_weights()
@@ -79,7 +64,7 @@ class Dense:
         """Inicializa los pesos de acuerdo al método especificado."""
         np.random.seed(self.random_seed)
         if self._weights_init == "uniform":
-            weights = np.random.uniform(-1, 1, (self._inputs, self._outputs))
+            weights = np.random.uniform(-0.5, 0.5, (self._inputs, self._outputs))
         elif self._weights_init == "zeros":
             weights = np.zeros((self._inputs, self._outputs))
         else:
@@ -92,7 +77,7 @@ class Dense:
         if self._bias_init == "zeros":
             bias = np.zeros(self._outputs)
         elif self._bias_init == "random":
-            bias = np.random.random(self._outputs)
+            bias = np.random.random(-0.5, 0.5,self._outputs)
         elif self._bias_init == "ones":
             bias = np.ones(self._outputs)
         else:
@@ -102,28 +87,21 @@ class Dense:
     def predict(self, X):
         """Forward propagation: Calcula la salida de la capa."""
         self.inputs = X
-        self.z = np.dot(self.inputs, self._weights) + self._bias
-        self.a = self._activation_function(self.z)
+        self.z = np.dot(self.inputs, self._weights) #+ self._bias
+        self.a = self.activation(self.z)
         return self.a
     
     def train(self, error, learning_rate=0.01):
         """Backpropagation: Actualiza los pesos y el bias."""
-        delta = error * self._activation_function.derivative(self.a)
+
+        delta = error * self.activation_prima(self.z)
+        input_error = np.dot(delta, self._weights.T)
         weights_update = np.dot(self.inputs.T, delta)
 
-        ##elimino la última dimensión de delta y weights_update
-        delta_shape = delta.shape
-        delta = delta.reshape(delta_shape[0], delta_shape[1])
-        weights_update_shape = weights_update.shape
-        weights_update = weights_update.reshape(weights_update_shape[0], weights_update_shape[1])
-        
-        ## actualizamos los pesos y biases
         self._weights -= learning_rate * weights_update
         self._bias -= learning_rate * delta.sum(axis=0)
-        
-        # Calcula el error para la capa anterior
-        prev_layer_error = np.dot(delta, self._weights.T)
-        return prev_layer_error
+
+        return input_error
 
     @property
     def weights(self):
