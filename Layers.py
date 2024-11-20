@@ -93,13 +93,21 @@ class Dense:
     
     def train(self, error, learning_rate=0.01):
         """Backpropagation: Actualiza los pesos y el bias."""
-
-        delta = error * self.activation_prima(self.z)
+        # delta = error * self.activation_prima(self.z)
+        ##reemplazo delta = error * self.activation_prima(self.z) por un producto con np.multiply
+        delta = np.multiply(self.activation_prima(self.z),error)
         input_error = np.dot(delta, self._weights.T)
         weights_update = np.dot(self.inputs.T, delta)
 
         self._weights -= learning_rate * weights_update
-        self._bias -= learning_rate * delta.sum(axis=0)
+
+        suma = delta.sum(axis=0)
+        if suma.ndim == 1:
+            self._bias -= learning_rate * suma
+        else:
+            self._bias = self._bias.reshape(1, self._bias.shape[0])
+            self._bias -= learning_rate * suma
+            self._bias = self._bias.reshape(self._bias.shape[1],)
 
         return input_error
 

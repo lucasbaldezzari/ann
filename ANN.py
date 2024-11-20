@@ -70,6 +70,9 @@ class NeuralNetwork:
             self.epoch_loss_hist.append(epoch_loss)
 
             epoch_loss /= (num_samples/batch_size)
+            ##si epoch_loss posee más de una dimensión, calculamos el promedio
+            if epoch_loss.ndim > 1:
+                epoch_loss = np.mean(epoch_loss)
             if epoch_loss < tolerancia:
                 print(f"Entrenamiento detenido en la época {epoch}, MSE: {mse}")
                 break
