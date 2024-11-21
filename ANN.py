@@ -73,9 +73,9 @@ class NeuralNetwork:
             ##si epoch_loss posee más de una dimensión, calculamos el promedio
             if epoch_loss.ndim > 1:
                 epoch_loss = np.mean(epoch_loss)
-            if epoch_loss < tolerancia:
-                print(f"Entrenamiento detenido en la época {epoch}, MSE: {mse}")
-                break
+            ##uso all() para verificar si todos los elementos son menores a tolerancia
+            if np.all(epoch_loss < tolerancia):
+                print(f"Época {epoch}, MSE: {epoch_loss}")
             
             if epoch % imprimir_cada == 0:
                 print(f"Época {epoch}, MSE: {mse}")
