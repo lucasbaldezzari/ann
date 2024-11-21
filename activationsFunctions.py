@@ -1,9 +1,9 @@
 """Módulo con las funciones de activación más comunes."""
 import numpy as np
 
-def sigmoid(x):
+def sigmoid(x, clipper=500):
     """Función sigmoide."""
-    x = np.clip(x, -500, 500)
+    x = np.clip(x, -1*clipper, clipper)
     return 1 / (1 + np.exp(-x))
 
 def sigmoid_prima(x):
@@ -27,14 +27,22 @@ def tanh_prima(x):
     """Derivada de la función tangente hiperbólica."""
     return 1 - np.tanh(x)**2
 
-def softmax(x):
+def softmax(x, clipper=500):
     """Función softmax."""
     exps = np.exp(x - np.max(x))
     return exps / np.sum(exps, axis=1, keepdims=True)
 
-def softmax_prima(x):
+def softmax_prima(x, clipper=500):
     """Derivada de la función softmax."""
-    return x * (1 - x)
+    x = np.clip(x, -1*clipper, clipper)
+    if x.shape[1] == 1:
+        return x * (1 - x)
+    else:
+        probas = np.zeros(x.shape)
+        for i in range(x.shape[0]):
+            probas[i] = np.exp(x[i]) / np.sum(np.exp(x[i]))
+
+        return probas
 
 def linear(x):
     """Función lineal."""
